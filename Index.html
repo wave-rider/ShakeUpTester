@@ -1,0 +1,111 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SUS Survey</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="ready">
+    <div style="padding: 10px;">
+        <h2 style="color: blue; text-align: center;">     
+        <span style="color:green">ShakeUp Tester</span> 
+        </h2>
+    </div>
+    <p style="padding: 10px;" id="desc">
+        
+    </p>
+    <input type="radio" id="answer1" name="answer" value="1" />
+        <label for="answer1">Strongly disagree</label>
+        <input type="radio" id="answer2" name="answer" value="2" />
+        <label for="answer2">Disagree</label>
+        <input type="radio" id="answer3" name="answer" value="3" />
+        <label for="answer3">Neither agree nor disagree</label>
+        <input type="radio" id="answer4" name="answer" value="4" />
+        <label for="answer4">Agree</label>
+        <input type="radio" id="answer5" name="answer" value="5" />
+        <label for="answer5">Strongly agree</label>
+</div>
+
+<div id="test">
+    <div style="text-align: center;">
+        <form>
+            <input id="submit-button" type="button" value="Next " onclick="gotoNext();" style="padding: 10px;">
+        </form>
+    </div>
+</div>
+
+<script>
+    var inputData = [
+    {code: "FA-S.1", desc: "I lost myself in this experience."},
+    {code: "FA-S.2", desc: "The time I spent using RRL just slipped away."},
+    {code: "FA-S.3", desc: "I was absorbed in this experience."},
+    {code: "PU-S.1", desc: "I felt frustrated while using this RRL."},
+    {code: "PU-S.2", desc: "I found this RRL confusing to use."},
+    {code: "PU-S.3", desc: "Using this RRL was taxing."},
+    {code: "AE-S.1", desc: "This RRL was attractive."},
+    {code: "AE-S.2", desc: "This RRL was aesthetically appealing."},
+    {code: "AE-S.3", desc: "This RRL appealed to my senses."},
+    {code: "RW-S.1", desc: "Using RRL was worthwhile."},
+    {code: "RW-S.2", desc: "My experience was rewarding."},
+    {code: "RW-S.3", desc: "I felt interested in this experience."}];                                                                                                               
+
+    // Generate a random number
+    var data = [...inputData];
+    var index = 0;
+    var randomInput = [];
+    var result = [];
+    while(data.length > 0)
+    {
+        var randomIndex = Math.round(Math.random()*(data.length-1));
+        randomInput.push(data.splice(randomIndex, 1));
+    }
+    showNext();
+
+    function showNext()
+    {
+        if (index < randomInput.length)
+        {
+            document.getElementById('desc').innerText = inputData[index].desc;
+            if (index == randomInput.length-1)
+            {
+                document.getElementById('submit-button').value = "Finish";
+            }
+        }
+    }
+
+    function gotoNext()
+    {
+        var checkedRadio = document.querySelector('input[name="answer"]:checked');
+        if (checkedRadio==null)
+            return;
+        var answerValue = checkedRadio.value;
+        checkedRadio.checked = false;
+        var elem = {...inputData[index], answer: answerValue };
+        result.push(elem);
+
+        if (index==randomInput.length-1)
+        {
+            var storedData = localStorage.getItem("resultItems");
+            var storedArray = [];
+            if (storedData)
+                storedArray = JSON.parse(storedData);
+            storedArray.push(result);
+            console.log(result);
+            var dataToSave = JSON.stringify(storedArray);
+            localStorage.setItem('resultItems', dataToSave);
+            document.getElementById('submit-button').disabled = true;
+        }
+
+        index++;
+        showNext();
+    }
+   
+    </script>
+
+    
+</body>
+</html>
