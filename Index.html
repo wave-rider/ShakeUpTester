@@ -13,7 +13,7 @@
     <div style="padding: 10px;">
         <h2 style="color: blue; text-align: center;">     
         <span style="color:green" id="test_header">ShakeUp Tester</span> 
-        &nbsp;<span id="testId"></span><br><span id='currentTestId'></span>
+        <br><span id='currentTestId'></span>
         </h2>
     </div>
     <div id="question-block" style="text-align: center;">
@@ -43,34 +43,22 @@
             <input id="submit-button" type="button" value="Next" onclick="gotoNext();" style="padding: 10px; margin: 10px;font-size: 2em;">
             <input id="finish-button" type="button" value="Finish" onclick="finishTest();" style="padding: 10px; margin: 10px;font-size: 2em;display: none;">
             <input id="start-again-button" type="button" value="Next Test" onclick="startAgain();" style="padding: 10px; margin: 10px;font-size: 2em;display: none;">
+            <input id="view-csv-button" type="button" value="View Csv" onclick="viewCsv();" style="padding: 10px; margin: 10px;font-size: 2em;display: none;">
         </form>
     </div>
 </div>
 
 <script>
-    var inputData = [
-    {code: "FA-S.1", desc: "I lost myself in this experience."},
-    {code: "FA-S.2", desc: "The time I spent using RRL just slipped away."},
-    {code: "FA-S.3", desc: "I was absorbed in this experience."},
-    {code: "PU-S.1", desc: "I felt frustrated while using this RRL."},
-    {code: "PU-S.2", desc: "I found this RRL confusing to use."},
-    {code: "PU-S.3", desc: "Using this RRL was taxing."},
-    {code: "AE-S.1", desc: "This RRL was attractive."},
-    {code: "AE-S.2", desc: "This RRL was aesthetically appealing."},
-    {code: "AE-S.3", desc: "This RRL appealed to my senses."},
-    {code: "RW-S.1", desc: "Using RRL was worthwhile."},
-    {code: "RW-S.2", desc: "My experience was rewarding."},
-    {code: "RW-S.3", desc: "I felt interested in this experience."}
-];                                                                                                               
-
     var data = [];
     var index = 0;
     var randomInput = [];
     var result = [];
     var results = [];
-    var tests = ['VR', 'Desktop'];
+    var tests = ['ShakeUp VR', 'ShakeUp Desktop'];
     var test_number=0;
     var testId = 0;
+    var inputData = [];
+    var codes = [];
 
     initTest();
     startTest();
@@ -88,12 +76,13 @@
 
     function startTest()
     {
-        document.getElementById('testId').innerHTML = testId;  
         document.getElementById('question-block').style.display = 'block';
         document.getElementById('comment-block').style.display = 'none';
         document.getElementById('finish-button').style.display = 'none';
         document.getElementById('submit-button').style.display = '';
         document.getElementById('start-again-button').style.display = 'none';
+        document.getElementById('view-csv-button').style.display = 'none';
+        
         
         document.getElementById('comment').value = '';
         
@@ -106,11 +95,31 @@
                 test_number = 0;
         }
 
+        let test_name = tests[test_number];
+
+        inputData = [
+            {code: "FA-S.1", desc: "I lost myself in this experience."},
+            {code: "FA-S.2", desc: `The time I spent using ${test_name} just slipped away.`},
+            {code: "FA-S.3", desc: "I was absorbed in this experience."},
+            {code: "PU-S.1", desc: `I felt frustrated while using this ${test_name}.`},
+            {code: "PU-S.2", desc: `I found this ${test_name} confusing to use.`},
+            {code: "PU-S.3", desc: `Using this ${test_name} was taxing.`},
+            {code: "AE-S.1", desc: `This ${test_name} was attractive.`},
+            {code: "AE-S.2", desc: `This ${test_name} was aesthetically appealing.`},
+            {code: "AE-S.3", desc: `This ${test_name} appealed to my senses.`},
+            {code: "RW-S.1", desc: `Using ${test_name} was worthwhile.`},
+            {code: "RW-S.2", desc: "My experience was rewarding."},
+            {code: "RW-S.3", desc: "I felt interested in this experience."}
+        ];         
+
         data = [...inputData];
+        codes = [];
+        inputData.forEach(function(elem){
+            codes.push(elem.code);
+        });
         index = 0;
         randomInput = [];
         result = [];
-        let test_name = tests[test_number];
         document.getElementById('test_header').innerText = test_name;
             
         while(data.length > 0)
@@ -120,6 +129,67 @@
         }
         
         showNext();
+    }
+
+    function viewCsv()
+    {
+        var storedData = localStorage.getItem("resultItems");
+        var storedArray = JSON.parse(storedData);
+        
+        let csvContentVr = "data:text/csv;charset=utf-8,";
+        let csvContentDesktop = "data:text/csv;charset=utf-8,";
+
+        storedArray.forEach(function(rowArray) {
+            let rowVr = `${rowArray.id},`;
+            let rowDesktop = `${rowArray.id},`;
+            let row = '';
+            rowArray.results.forEach(function(r){
+                var answerScores = getAnswerScores(r.questions);
+                var sum = 0;
+                var str = `${r.comment},`;
+                
+                for (const [key, value] of Object.entries(answerScores)) {
+                    sum += value;
+                    str += value + ",";
+                }
+
+                str  += sum;
+                if (r.name.localeCompare('ShakeUp VR'))
+                {
+                    rowVr += str + "\r\n";
+                    csvContentVr += rowVr;
+                }
+                else
+                {
+                    rowDesktop += str + "\r\n";
+                    csvContentDesktop += rowDesktop;
+                }
+            });
+        });
+        var encodedUri = encodeURI(csvContentVr);
+        window.open(encodedUri, 'vr.csv');
+        encodedUriDesktop = encodeURI(csvContentDesktop);
+        window.open(encodedUriDesktop, 'desktop.csv');
+    }
+
+    function getAnswerScores(questions)
+    {
+        var qst = [];
+        codes.forEach(function(code){
+            qst[code] = 0;
+        });
+
+        var answersRow = '';
+        questions.forEach(function(q){
+            var answer = parseInt(q.answer) + 1;
+            if (q.code=='PU-S.1' || q.code=='PU-S.2' || q.code=='PU-S.3')
+            {
+                answer = 6 - answer;
+            }
+            qst[q.code] = answer;
+        });
+       
+        return qst;
     }
 
     function startAgain()
@@ -133,7 +203,7 @@
         if (index < randomInput.length)
         {
             document.getElementById('desc').innerText = inputData[index].desc;
-            document.getElementById('currentTestId').innerText = `Test ${index+1}/${inputData.length}`;
+            document.getElementById('currentTestId').innerText = `Question ${index+1}/${inputData.length}`;
         }
     }
 
@@ -186,6 +256,7 @@
         document.getElementById('finish-button').style.display = 'none';
         document.getElementById('comment-block').style.display = 'none';
         document.getElementById('start-again-button').style.display = '';
+        document.getElementById('view-csv-button').style.display = '';
     }
    
     </script>
