@@ -139,6 +139,14 @@
         let csvContentVr = "data:text/csv;charset=utf-8,";
         let csvContentDesktop = "data:text/csv;charset=utf-8,";
 
+        let header = 'id,comment';
+        codes.forEach(function(elem){
+            header += ',' + elem;
+        });
+        header += ',score \r\n';
+        csvContentVr += header;
+        csvContentDesktop += header;
+
         storedArray.forEach(function(rowArray) {
             let rowVr = `${rowArray.id},`;
             let rowDesktop = `${rowArray.id},`;
@@ -167,9 +175,20 @@
             });
         });
         var encodedUri = encodeURI(csvContentVr);
-        window.open(encodedUri, 'vr.csv');
+        openCsv(encodedUri, 'vr.csv');
         encodedUriDesktop = encodeURI(csvContentDesktop);
-        window.open(encodedUriDesktop, 'desktop.csv');
+        openCsv(encodedUriDesktop, 'desktop.csv');
+
+        
+    }
+
+    function openCsv(encodedURI, fileName)
+    {
+        var hiddenElement = document.createElement('a');
+        hiddenElement.href = encodedURI;
+        hiddenElement.target = '_blank';
+        hiddenElement.download = fileName;
+        hiddenElement.click();
     }
 
     function getAnswerScores(questions)
