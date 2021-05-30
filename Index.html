@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -127,7 +126,6 @@
             var randomIndex = Math.round(Math.random()*(data.length-1));
             randomInput.push(data.splice(randomIndex, 1));
         }
-        
         showNext();
     }
 
@@ -221,8 +219,8 @@
     {
         if (index < randomInput.length)
         {
-            document.getElementById('desc').innerText = inputData[index].desc;
-            document.getElementById('currentTestId').innerText = `Question ${index+1}/${inputData.length}`;
+            document.getElementById('desc').innerText = randomInput[index].desc;
+            document.getElementById('currentTestId').innerText = `Question ${index+1}/${randomInput.length}`;
         }
     }
 
@@ -234,7 +232,7 @@
 
         var answerValue = checkedRadio.value;
         checkedRadio.checked = false;
-        var elem = {...inputData[index], answer: answerValue };
+        var elem = {...randomInput[index], answer: answerValue };
         result.push(elem);
 
         if (index == randomInput.length - 1)
