@@ -9,16 +9,17 @@
 </head>
 <body>
 
-<div id="ready">
+<div id="ready" style="font-size: 2em;">
     <div style="padding: 10px;">
         <h2 style="color: blue; text-align: center;">     
-        <span style="color:green">ShakeUp Tester</span> 
+        <span style="color:green" id="test_header">ShakeUp Tester</span> 
+        &nbsp;<span id="testId"></span><br><span id='currentTestId'></span>
         </h2>
     </div>
-    <p style="padding: 10px;" id="desc">
-        
-    </p>
-    <input type="radio" id="answer1" name="answer" value="1" />
+    <div id="question-block" style="text-align: center;">
+        <p style="padding: 10px;" id="desc">        
+        </p>
+        <input type="radio" id="answer1" name="answer" value="1" />
         <label for="answer1">Strongly disagree</label>
         <input type="radio" id="answer2" name="answer" value="2" />
         <label for="answer2">Disagree</label>
@@ -28,12 +29,20 @@
         <label for="answer4">Agree</label>
         <input type="radio" id="answer5" name="answer" value="5" />
         <label for="answer5">Strongly agree</label>
+    </div>
+    <div id="comment-block" style="display: none;text-align: center;">
+        <span style="text-align: start;">Comment</span>
+        <textarea id='comment' style="width:50%;height: 200px;"></textarea>
+    </div>
 </div>
+    
 
 <div id="test">
     <div style="text-align: center;">
         <form>
-            <input id="submit-button" type="button" value="Next " onclick="gotoNext();" style="padding: 10px;">
+            <input id="submit-button" type="button" value="Next" onclick="gotoNext();" style="padding: 10px; margin: 10px;font-size: 2em;">
+            <input id="finish-button" type="button" value="Finish" onclick="finishTest();" style="padding: 10px; margin: 10px;font-size: 2em;display: none;">
+            <input id="start-again-button" type="button" value="Next Test" onclick="startAgain();" style="padding: 10px; margin: 10px;font-size: 2em;display: none;">
         </form>
     </div>
 </div>
@@ -51,57 +60,132 @@
     {code: "AE-S.3", desc: "This RRL appealed to my senses."},
     {code: "RW-S.1", desc: "Using RRL was worthwhile."},
     {code: "RW-S.2", desc: "My experience was rewarding."},
-    {code: "RW-S.3", desc: "I felt interested in this experience."}];                                                                                                               
+    {code: "RW-S.3", desc: "I felt interested in this experience."}
+];                                                                                                               
 
-    // Generate a random number
-    var data = [...inputData];
+    var data = [];
     var index = 0;
     var randomInput = [];
     var result = [];
-    while(data.length > 0)
+    var results = [];
+    var tests = ['VR', 'Desktop'];
+    var test_number=0;
+    var testId = 0;
+
+    initTest();
+    startTest();
+
+    function initTest()
     {
-        var randomIndex = Math.round(Math.random()*(data.length-1));
-        randomInput.push(data.splice(randomIndex, 1));
+        test_number = Math.round(Math.random());
+        var storedData = localStorage.getItem("resultItems");
+        var storedArray = [];
+        if (storedData)
+            storedArray = JSON.parse(storedData);
+        testId = storedArray.length + 1;
+        results = [];
     }
-    showNext();
+
+    function startTest()
+    {
+        document.getElementById('testId').innerHTML = testId;  
+        document.getElementById('question-block').style.display = 'block';
+        document.getElementById('comment-block').style.display = 'none';
+        document.getElementById('finish-button').style.display = 'none';
+        document.getElementById('submit-button').style.display = '';
+        document.getElementById('start-again-button').style.display = 'none';
+        
+        document.getElementById('comment').value = '';
+        
+
+        if (results.length == tests.length - 1)//This is the last test
+        {
+            if (test_number==0)
+                test_number = 1;
+            else
+                test_number = 0;
+        }
+
+        data = [...inputData];
+        index = 0;
+        randomInput = [];
+        result = [];
+        let test_name = tests[test_number];
+        document.getElementById('test_header').innerText = test_name;
+            
+        while(data.length > 0)
+        {
+            var randomIndex = Math.round(Math.random()*(data.length-1));
+            randomInput.push(data.splice(randomIndex, 1));
+        }
+        
+        showNext();
+    }
+
+    function startAgain()
+    {
+        initTest();
+        startTest();
+    }
 
     function showNext()
     {
         if (index < randomInput.length)
         {
             document.getElementById('desc').innerText = inputData[index].desc;
-            if (index == randomInput.length-1)
-            {
-                document.getElementById('submit-button').value = "Finish";
-            }
+            document.getElementById('currentTestId').innerText = `Test ${index+1}/${inputData.length}`;
         }
     }
 
     function gotoNext()
     {
         var checkedRadio = document.querySelector('input[name="answer"]:checked');
-        if (checkedRadio==null)
+        if (checkedRadio == null)
             return;
+
         var answerValue = checkedRadio.value;
         checkedRadio.checked = false;
         var elem = {...inputData[index], answer: answerValue };
         result.push(elem);
 
-        if (index==randomInput.length-1)
+        if (index == randomInput.length - 1)
         {
-            var storedData = localStorage.getItem("resultItems");
-            var storedArray = [];
-            if (storedData)
-                storedArray = JSON.parse(storedData);
-            storedArray.push(result);
-            console.log(result);
-            var dataToSave = JSON.stringify(storedArray);
-            localStorage.setItem('resultItems', dataToSave);
-            document.getElementById('submit-button').disabled = true;
+            // show enter comments div
+            document.getElementById('question-block').style.display = 'none';
+            document.getElementById('comment-block').style.display = 'block';
+            document.getElementById('finish-button').style.display = '';
+            document.getElementById('submit-button').style.display = 'none';
+            return;
         }
 
         index++;
         showNext();
+    }
+
+    function finishTest()
+    {
+        results.push({ name: tests[test_number],
+                       questions: result,
+                       comment: document.getElementById('comment').value} );
+        if (results.length == tests.length)
+            saveResults();
+        else
+            startTest();
+    }
+
+    function saveResults()
+    {
+        var storedData = localStorage.getItem("resultItems");
+        var storedArray = [];
+        if (storedData)
+            storedArray = JSON.parse(storedData);
+        var t= {id:testId, results:results };
+        storedArray.push(t);
+        var dataToSave = JSON.stringify(storedArray);
+        localStorage.setItem('resultItems', dataToSave);
+        document.getElementById('finish-button').style.display = 'none';
+        document.getElementById('comment-block').style.display = 'none';
+        document.getElementById('start-again-button').style.display = '';
     }
    
     </script>
